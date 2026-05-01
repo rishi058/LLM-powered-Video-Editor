@@ -1,0 +1,36 @@
+{
+  "name": "render-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone Remotion render server + API backend for the video editor",
+  "scripts": {
+    "dev": "tsx watch --env-file=.env src/server.ts",
+    "start": "node --env-file=.env --import tsx/esm src/server.ts"
+  },
+  "dependencies": {
+    "@remotion/bundler": "^4.0.451",
+    "@remotion/captions": "^4.0.451",
+    "@remotion/google-fonts": "^4.0.451",
+    "@remotion/player": "^4.0.451",
+    "@remotion/renderer": "^4.0.451",
+    "@remotion/transitions": "^4.0.451",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "multer": "^2.0.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "remotion": "^4.0.451",
+    "zod": "4.0.9"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^24.1.0",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "tsx": "^4.20.4",
+    "typescript": "^5.8.3"
+  }
+}

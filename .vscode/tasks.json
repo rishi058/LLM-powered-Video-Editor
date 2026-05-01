@@ -1,0 +1,43 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "🐍 run backend",
+            "type": "shell",
+            "command": "cd backend && python main.py",
+            "presentation": {
+                "panel": "new"
+            }
+        },
+        {
+            "label": "🎬 run render-server",
+            "type": "shell",
+            "command": "cd render-server && npm run dev",
+            "presentation": {
+                "panel": "new"
+            }
+        },
+        {
+            "label": "💻 run videoeditor",
+            "type": "shell",
+            "command": "cd videoeditor && npm run dev",
+            "presentation": {
+                "panel": "new"
+            }
+        },
+        {
+            "label": "🚀 start all",
+            "dependsOn": [
+                "🐍 run backend",
+                "🎬 run render-server",
+                "💻 run videoeditor",
+            ],
+            "dependsOrder": "parallel",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
