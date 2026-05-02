@@ -1,4 +1,5 @@
 import { Player, type PlayerRef } from "@remotion/player";
+import { preloadVideo } from "@remotion/preload";
 import { Sequence, AbsoluteFill, Img, OffthreadVideo, Audio } from "remotion";
 import {
   linearTiming,
@@ -11,7 +12,7 @@ import { iris } from "@remotion/transitions/iris";
 import { wipe } from "@remotion/transitions/wipe";
 import { flip } from "@remotion/transitions/flip";
 import { slide } from "@remotion/transitions/slide";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   FPS,
   PIXELS_PER_SECOND,
@@ -73,6 +74,30 @@ export function TimelineComposition({
   const resolvedPixelsPerSecond = isRendering
     ? (getPixelsPerSecond as number)
     : (getPixelsPerSecond as () => number)();
+
+  // ── Black-frame prevention ──────────────────────────────────────────────
+  // In preview mode, preload all video URLs as soon as timelineData changes.
+  // This tells the browser to start fetching/decoding before the playhead
+  // arrives at the scrubber, eliminating the brief black flash.
+  // NOTE: preloadVideo() is skipped during rendering to avoid unnecessary work.
+  useEffect(() => {
+    if (isRendering) return;
+    const cleanups: Array<() => void> = [];
+    for (const item of timelineData) {
+      for (const scrubber of item.scrubbers) {
+        if (scrubber.mediaType === "video") {
+          const rawUrl = scrubber.mediaUrlLocal || scrubber.mediaUrlRemote;
+          const url = resolveMediaUrl(rawUrl, false);
+          if (url) {
+            const free = preloadVideo(url);
+            cleanups.push(free);
+          }
+        }
+      }
+    }
+    return () => cleanups.forEach((free) => free());
+  }, [timelineData, isRendering]);
+
   // Get all transitions from timelineData
   const allTransitions = timelineData[0].transitions;
 
@@ -182,6 +207,9 @@ export function TimelineComposition({
               src={videoUrl!}
               trimBefore={trimProps.trimBefore}
               trimAfter={trimProps.trimAfter}
+              // pauseWhenBuffering: stall the Player instead of flashing a
+              // black frame when the video hasn't been decoded yet.
+              pauseWhenBuffering
             />
           </AbsoluteFill>
         );
@@ -256,6 +284,11 @@ export function TimelineComposition({
         return linearTiming({ durationInFrames: transition.durationInFrames });
     }
   };
+
+  // How many frames before a video Sequence becomes active should we premount it?
+  // 90 frames = 3 seconds @ 30 fps — gives OffthreadVideo time to decode.
+  // 0 in render mode so we don't waste work.
+  const PREMOUNT_FRAMES = isRendering ? 0 : 90;
 
   // Step 3 & 4: Create tracks with gaps filled and transitions added
   const trackElements: React.ReactNode[] = [];
@@ -363,10 +396,12 @@ export function TimelineComposition({
               // Create media content for non-grouped scrubber
               const mediaContent = createMediaContent(currentScrubber);
               if (mediaContent) {
+                const isVideoScrubber = currentScrubber.mediaType === "video";
                 transitionSeriesElements.push(
                   <TransitionSeries.Sequence
                     key={keyPrefix}
                     durationInFrames={durationCalculation()}
+                    premountFor={isVideoScrubber ? PREMOUNT_FRAMES : 0}
                   >
                     {mediaContent}
                   </TransitionSeries.Sequence>
@@ -421,10 +456,14 @@ export function TimelineComposition({
             // Create media content for non-grouped scrubber
             const mediaContent = createMediaContent(currentScrubber);
             if (mediaContent) {
+              const isVideoScrubber = currentScrubber.mediaType === "video";
               transitionSeriesElements.push(
                 <TransitionSeries.Sequence
                   key={keyPrefix}
                   durationInFrames={durationCalculation()}
+                  // premountFor: mount this Sequence N frames before it becomes
+                  // active, giving OffthreadVideo time to decode. preview-only.
+                  premountFor={isVideoScrubber ? PREMOUNT_FRAMES : 0}
                 >
                   {mediaContent}
                 </TransitionSeries.Sequence>
