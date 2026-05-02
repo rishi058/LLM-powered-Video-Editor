@@ -8,6 +8,7 @@ import { renderRouter } from "./routes/render.js";
 import { assetsRouter } from "./routes/assets.js";
 import { projectsRouter } from "./routes/projects.js";
 import { subtitlesRouter } from "./routes/subtitles.js";
+import { customLogger } from "./logger.js";
 
 const port = Number(process.env.PORT ?? 8000);
 
@@ -34,10 +35,11 @@ app.use(cors({
     "http://localhost:4173", // vite preview
     /^http:\/\/localhost:\d+$/,
   ],
-  credentials: true,
+  credentials: true, 
 }));
 
 app.use(express.json({ limit: "10mb" }));
+app.use(customLogger);
 
 // ---------- routes ----------
 

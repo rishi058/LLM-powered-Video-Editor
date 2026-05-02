@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   PIXELS_PER_SECOND,
   MIN_ZOOM,
@@ -194,12 +194,44 @@ export const useTimeline = () => {
   }, [timeline, getPixelsPerSecond]);
 
   const getTimelineState = useCallback(() => {
-    return timeline;
+    const currentZoom = zoomLevelRef.current;
+    // Normalize scrubber positions to zoom=1 for persistence
+    const normalizedTimeline: TimelineState = {
+      ...timeline,
+      tracks: timeline.tracks.map((track) => ({
+        ...track,
+        scrubbers: track.scrubbers.map((scrubber) => ({
+          ...scrubber,
+          left: currentZoom !== 0 ? scrubber.left / currentZoom : scrubber.left,
+          width: currentZoom !== 0 ? scrubber.width / currentZoom : scrubber.width,
+        })),
+      })),
+    };
+    return { timeline: normalizedTimeline, zoomLevel: currentZoom };
   }, [timeline]);
 
-  const setTimelineFromServer = useCallback((newTimeline: TimelineState) => {
-    setTimeline(newTimeline);
-  }, [setTimeline]);
+  /**
+   * Restore timeline from server. Positions in `newTimeline` are zoom=1 normalized.
+   * Pass `savedZoomLevel` to re-apply the zoom after loading.
+   */
+  const setTimelineFromServer = useCallback((newTimeline: TimelineState, savedZoomLevel?: number) => {
+    const targetZoom = (typeof savedZoomLevel === "number" && savedZoomLevel > 0) ? savedZoomLevel : DEFAULT_ZOOM;
+    // Scale scrubber positions from zoom=1 to the target zoom
+    const scaledTimeline: TimelineState = {
+      ...newTimeline,
+      tracks: newTimeline.tracks.map((track) => ({
+        ...track,
+        scrubbers: track.scrubbers.map((scrubber) => ({
+          ...scrubber,
+          left: scrubber.left * targetZoom,
+          width: scrubber.width * targetZoom,
+        })),
+      })),
+    };
+    zoomLevelRef.current = targetZoom;
+    setZoomLevel(targetZoom);
+    setTimeline(scaledTimeline);
+  }, [setTimeline, setZoomLevel]);
 
   const expandTimeline = useCallback(
     (containerRef: React.RefObject<HTMLDivElement | null>) => {
@@ -366,7 +398,7 @@ export const useTimeline = () => {
         toast.success("Scrubber deleted");
       }
     },
-    [timeline, snapshotTimeline],
+    [timeline, snapshotTimeline, setTimeline],
   );
 
   const handleDeleteScrubbersByMediaBinId = useCallback(
@@ -435,7 +467,7 @@ export const useTimeline = () => {
         }
       }
     },
-    [timeline, snapshotTimeline],
+    [timeline, snapshotTimeline, setTimeline],
   );
 
   const handleAddScrubberToTrack = useCallback((trackId: string, newScrubber: ScrubberState): string => {
@@ -630,6 +662,7 @@ export const useTimeline = () => {
       generateNewUUIDsForGroupedScrubbers,
       getAllTransitions,
       snapshotTimeline,
+      setTimeline,
     ],
   );
 
@@ -1322,7 +1355,7 @@ export const useTimeline = () => {
         };
       });
     },
-    [zoomLevel],
+    [zoomLevel, setTimeline],
   );
 
   // Ungroup a grouped scrubber back into individual scrubbers

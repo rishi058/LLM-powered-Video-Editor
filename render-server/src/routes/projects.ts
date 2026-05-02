@@ -39,15 +39,16 @@ async function loadProjectState(projectId: string) {
       return {
         timeline: parsed.timeline ?? defaultTimeline(),
         mediaBinItems: Array.isArray(parsed.mediaBinItems) ? parsed.mediaBinItems : (Array.isArray(parsed.textBinItems) ? parsed.textBinItems : []),
+        zoomLevel: typeof parsed.zoomLevel === "number" ? parsed.zoomLevel : 1.0,
       };
     }
-    return { timeline: parsed ?? defaultTimeline(), mediaBinItems: [] };
+    return { timeline: parsed ?? defaultTimeline(), mediaBinItems: [], zoomLevel: 1.0 };
   } catch {
-    return { timeline: defaultTimeline(), mediaBinItems: [] };
+    return { timeline: defaultTimeline(), mediaBinItems: [], zoomLevel: 1.0 };
   }
 }
 
-async function saveProjectState(projectId: string, state: { timeline: unknown; mediaBinItems: unknown[] }) {
+async function saveProjectState(projectId: string, state: { timeline: unknown; mediaBinItems: unknown[]; zoomLevel: number }) {
   const file = getTimelineFilePath(projectId);
   await fs.promises.writeFile(file, JSON.stringify(state), "utf8");
 }
@@ -81,7 +82,7 @@ projectsRouter.get("/:id", async (req: Request, res: Response): Promise<void> =>
     const project = await r.json() as Record<string, unknown>;
     if (project.user_id !== USER_ID) { res.status(404).json({ error: "Not found" }); return; }
     const state = await loadProjectState(req.params.id as string);
-    res.json({ project, timeline: state.timeline, mediaBinItems: state.mediaBinItems });
+    res.json({ project, timeline: state.timeline, mediaBinItems: state.mediaBinItems, zoomLevel: state.zoomLevel });
   } catch (error) {
     console.error("Get project error:", error);
     res.status(500).json({ error: "Failed to get project" });
@@ -115,7 +116,7 @@ projectsRouter.patch("/:id", async (req: Request, res: Response): Promise<void> 
       res.status(404).json({ error: "Not found" });
       return;
     }
-    const body = req.body as { name?: string; timeline?: unknown; mediaBinItems?: unknown[], textBinItems?: unknown[] };
+    const body = req.body as { name?: string; timeline?: unknown; mediaBinItems?: unknown[], textBinItems?: unknown[], zoomLevel?: number };
 
     if (body.name) {
       await dbFetch(`/db/projects/${encodeURIComponent(id)}`, {
@@ -125,11 +126,12 @@ projectsRouter.patch("/:id", async (req: Request, res: Response): Promise<void> 
       });
     }
 
-    if (body.timeline || body.mediaBinItems || body.textBinItems) {
+    if (body.timeline || body.mediaBinItems || body.textBinItems || body.zoomLevel !== undefined) {
       const prev = await loadProjectState(id);
       await saveProjectState(id, {
         timeline: body.timeline ?? prev.timeline,
         mediaBinItems: body.mediaBinItems ?? body.textBinItems ?? prev.mediaBinItems,
+        zoomLevel: body.zoomLevel ?? prev.zoomLevel,
       });
     }
 

@@ -1,11 +1,11 @@
 # Graph Report - D:\STUDY 2\MediaEditor  (2026-05-02)
 
 ## Corpus Check
-- 121 files · ~91,398 words
+- 122 files · ~91,888 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 456 nodes · 435 edges · 115 communities detected
+- 458 nodes · 437 edges · 115 communities detected
 - Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 26 edges (avg confidence: 0.78)
 - Token cost: 0 input · 0 output
 
@@ -185,7 +185,7 @@ Cohesion: 0.29
 Nodes (11): BaseSchema, BaseScrubber, FunctionCallResponse, MediaBinItem, V2 universal tool-call envelope.      - function_name: name of the tool to execu, V2 AI response shape (universal schema).      - function_call: UniversalToolCall, ScrubberState, TextProperties (+3 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.2
+Cohesion: 0.17
 Nodes (0): 
 
 ### Community 9 - "Community 9"

@@ -122,7 +122,7 @@ export default function TimelineEditor() {
     } else {
       setSelectedScrubberIds(itemOrUpdater ? [itemOrUpdater] : []);
     }
-  }, []);
+  }, [setSelectedScrubberIds]);
 
   const {
     timeline,
@@ -275,7 +275,7 @@ export default function TimelineEditor() {
       }
       const j = await res.json();
       setProjectName(j.project?.name || "Project");
-      if (j.timeline) setTimelineFromServer(j.timeline);
+      if (j.timeline) setTimelineFromServer(j.timeline, typeof j.zoomLevel === "number" ? j.zoomLevel : 1.0);
       // Use saved mediaBinItems if present, else extract from timeline
       try {
         if (Array.isArray(j.mediaBinItems) && j.mediaBinItems.length) {
@@ -354,8 +354,9 @@ export default function TimelineEditor() {
   useEffect(() => {
     if (isMediaLoading) return;
     if (!mediaBinItems || mediaBinItems.length === 0) return;
-
-    const current = getTimelineState();
+    // getTimelineState() returns normalized (zoom=1) data; we need the raw in-memory timeline
+    // to check/update scrubber references without re-scaling. Use the underlying store state.
+    const { timeline: normalizedTimeline, zoomLevel: currentZoom } = getTimelineState();
     let changed = false;
 
     const hydratedAssets = mediaBinItems.filter(
@@ -365,7 +366,8 @@ export default function TimelineEditor() {
     const assetsByRemote = new Map(hydratedAssets.map((item) => [item.mediaUrlRemote, item]));
     const assetsByName = new Map(hydratedAssets.map((item) => [mediaKey(item.name), item]));
 
-    const newTracks = current.tracks.map((track) => ({
+    // Work on normalized positions; setTimelineFromServer will re-apply zoom
+    const newTracks = normalizedTimeline.tracks.map((track) => ({
       ...track,
       scrubbers: track.scrubbers.map((s) => {
         if (s.mediaType === "text" || s.mediaType === "groupped_scrubber") return s;
@@ -408,7 +410,8 @@ export default function TimelineEditor() {
     }));
 
     if (changed) {
-      setTimelineFromServer({ ...current, tracks: newTracks });
+      // Pass normalized timeline + current zoom so setTimelineFromServer re-scales correctly
+      setTimelineFromServer({ ...normalizedTimeline, tracks: newTracks }, currentZoom);
     }
   }, [isMediaLoading, mediaBinItems, getTimelineState, setTimelineFromServer]);
 
@@ -421,7 +424,7 @@ export default function TimelineEditor() {
         toast.error("No project ID");
         return;
       }
-      const timelineState = getTimelineState();
+      const { timeline: timelineToSave, zoomLevel: currentZoom } = getTimelineState();
       // persist all media bin items alongside timeline
       const mediaItemsPayload = getMediaBinItems();
       const res = await fetch(`/api/projects/${encodeURIComponent(id)}`, {
@@ -429,7 +432,8 @@ export default function TimelineEditor() {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          timeline: timelineState,
+          timeline: timelineToSave,
+          zoomLevel: currentZoom,
           mediaBinItems: mediaItemsPayload,
         }),
       });
@@ -485,7 +489,7 @@ export default function TimelineEditor() {
       window.removeEventListener("keydown", onKeyDown, {
         capture: true,
       } as AddEventListenerOptions);
-  }, [handleSaveTimeline, undo, redo, selectedScrubberIds, handleDeleteScrubber]);
+  }, [handleSaveTimeline, undo, redo, selectedScrubberIds, handleDeleteScrubber, setSelectedScrubberIds]);
 
   const handleFileInputChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -598,7 +602,7 @@ export default function TimelineEditor() {
       // Normal click - select only this scrubber
       setSelectedScrubberIds([scrubberId]);
     }
-  }, []);
+  }, [setSelectedScrubberIds]);
 
   const handleSplitClick = useTimelineSplit({
     playerRef,
@@ -619,7 +623,7 @@ export default function TimelineEditor() {
     handleGroupScrubbers(selectedScrubberIds);
     setSelectedScrubberIds([]); // Clear selection after grouping
     toast.success(`Grouped ${selectedScrubberIds.length} scrubbers`);
-  }, [selectedScrubberIds, handleGroupScrubbers]);
+  }, [selectedScrubberIds, handleGroupScrubbers, setSelectedScrubberIds]);
 
   // Handler for ungrouping a grouped scrubber
   const handleUngroupSelected = useCallback(
@@ -628,7 +632,7 @@ export default function TimelineEditor() {
       setSelectedScrubberIds([]); // Clear selection after ungrouping
       toast.success("Ungrouped scrubber");
     },
-    [handleUngroupScrubber],
+    [handleUngroupScrubber, setSelectedScrubberIds],
   );
 
   // Handler for moving grouped scrubber to media bin
@@ -637,7 +641,7 @@ export default function TimelineEditor() {
       handleMoveGroupToMediaBin(scrubberId, handleAddGroupToMediaBin);
       setSelectedScrubberIds([]); // Clear selection after moving
     },
-    [handleMoveGroupToMediaBin, handleAddGroupToMediaBin],
+    [handleMoveGroupToMediaBin, handleAddGroupToMediaBin, setSelectedScrubberIds],
   );
 
   const expandTimelineCallback = useCallback(() => {

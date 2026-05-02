@@ -769,6 +769,24 @@
       "norm_label": "__init__.py"
     },
     {
+      "label": "logger.ts",
+      "file_type": "code",
+      "source_file": "D:\\STUDY 2\\MediaEditor\\render-server\\src\\logger.ts",
+      "source_location": "L1",
+      "id": "d_study_2_mediaeditor_render_server_src_logger_ts",
+      "community": 8,
+      "norm_label": "logger.ts"
+    },
+    {
+      "label": "customLogger()",
+      "file_type": "code",
+      "source_file": "D:\\STUDY 2\\MediaEditor\\render-server\\src\\logger.ts",
+      "source_location": "L39",
+      "id": "logger_customlogger",
+      "community": 8,
+      "norm_label": "customlogger()"
+    },
+    {
       "label": "server.ts",
       "file_type": "code",
       "source_file": "D:\\STUDY 2\\MediaEditor\\render-server\\src\\server.ts",
@@ -1024,7 +1042,7 @@
       "label": "saveProjectState()",
       "file_type": "code",
       "source_file": "D:\\STUDY 2\\MediaEditor\\render-server\\src\\routes\\projects.ts",
-      "source_location": "L50",
+      "source_location": "L51",
       "id": "projects_saveprojectstate",
       "community": 4,
       "norm_label": "saveprojectstate()"
@@ -1033,7 +1051,7 @@
       "label": "dbFetch()",
       "file_type": "code",
       "source_file": "D:\\STUDY 2\\MediaEditor\\render-server\\src\\routes\\projects.ts",
-      "source_location": "L57",
+      "source_location": "L58",
       "id": "projects_dbfetch",
       "community": 4,
       "norm_label": "dbfetch()"
@@ -5491,6 +5509,30 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "D:\\STUDY 2\\MediaEditor\\render-server\\src\\logger.ts",
+      "source_location": "L39",
+      "weight": 1.0,
+      "_src": "d_study_2_mediaeditor_render_server_src_logger_ts",
+      "_tgt": "logger_customlogger",
+      "source": "d_study_2_mediaeditor_render_server_src_logger_ts",
+      "target": "logger_customlogger",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "D:\\STUDY 2\\MediaEditor\\render-server\\src\\server.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_src": "d_study_2_mediaeditor_render_server_src_server_ts",
+      "_tgt": "d_study_2_mediaeditor_render_server_src_logger_ts",
+      "source": "d_study_2_mediaeditor_render_server_src_logger_ts",
+      "target": "d_study_2_mediaeditor_render_server_src_server_ts",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "D:\\STUDY 2\\MediaEditor\\render-server\\src\\server.ts",
@@ -5782,7 +5824,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "D:\\STUDY 2\\MediaEditor\\render-server\\src\\routes\\projects.ts",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0,
       "_src": "d_study_2_mediaeditor_render_server_src_routes_projects_ts",
       "_tgt": "projects_saveprojectstate",
@@ -5794,7 +5836,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "D:\\STUDY 2\\MediaEditor\\render-server\\src\\routes\\projects.ts",
-      "source_location": "L57",
+      "source_location": "L58",
       "weight": 1.0,
       "_src": "d_study_2_mediaeditor_render_server_src_routes_projects_ts",
       "_tgt": "projects_dbfetch",
@@ -5818,7 +5860,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "D:\\STUDY 2\\MediaEditor\\render-server\\src\\routes\\projects.ts",
-      "source_location": "L51",
+      "source_location": "L52",
       "weight": 1.0,
       "_src": "projects_saveprojectstate",
       "_tgt": "projects_gettimelinefilepath",
