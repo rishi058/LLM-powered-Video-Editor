@@ -145,13 +145,12 @@ def list_assets(user_id: str, project_id: str = None) -> List[Dict[str, Any]]:
     finally:
         conn.close()
 
-def soft_delete_asset(asset_id: str, user_id: str) -> bool:
+def delete_asset(asset_id: str, user_id: str) -> bool:
     conn = get_connection()
     try:
-        now = datetime.now(timezone.utc).isoformat()
         cursor = conn.execute(
-            "UPDATE assets SET deleted_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL",
-            (now, asset_id, user_id)
+            "DELETE FROM assets WHERE id = ? AND user_id = ?",
+            (asset_id, user_id)
         )
         conn.commit()
         return cursor.rowcount > 0

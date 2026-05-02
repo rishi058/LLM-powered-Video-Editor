@@ -73,7 +73,7 @@ async function dbGetAsset(id: string) {
   return res.json() as Promise<Record<string, unknown>>;
 }
 
-async function dbSoftDeleteAsset(id: string, userId: string) {
+async function dbDeleteAsset(id: string, userId: string) {
   const res = await fetch(`${PYTHON_API}/db/assets/${encodeURIComponent(id)}?userId=${encodeURIComponent(userId)}`, {
     method: "DELETE",
   });
@@ -287,7 +287,7 @@ assetsRouter.delete("/:id", async (req: Request, res: Response): Promise<void> =
     if (filePath.startsWith(OUT_DIR) && fs.existsSync(filePath)) {
       try { fs.unlinkSync(filePath); } catch { /* ignore */ }
     }
-    await dbSoftDeleteAsset(req.params.id as string, userId);
+    await dbDeleteAsset(req.params.id as string, userId);
     res.json({ success: true });
   } catch (error) {
     console.error("Delete asset error:", error);

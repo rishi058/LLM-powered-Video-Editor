@@ -80,7 +80,7 @@ def get_asset(asset_id: str):
 
 @router.delete("/assets/{asset_id}")
 def delete_asset(asset_id: str, userId: str = Query(...)):
-    success = db.soft_delete_asset(asset_id, userId)
+    success = db.delete_asset(asset_id, userId)
     if not success:
         raise HTTPException(status_code=404, detail="Not Found")
     return {"success": True}
